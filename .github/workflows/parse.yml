@@ -1,0 +1,36 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+    - name: Download
+      run: |
+        python codes/download.py
+      continue-on-error: true
+    - name: Save results
+      run: |
+        if [[ -z $(git status -s) ]]
+        then
+          echo "Nothing to commit, tree is clean"
+        else
+          TODAY=$(date +"%FT%H:%M:%S%z")
+          git add -A
+          git -c user.name=GitHub -c user.email=noreply@github.com commit \
+            -m "Csv updated: ${TODAY}"
+          git push
+        fi
+      continue-on-error: true
