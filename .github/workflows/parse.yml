@@ -36,6 +36,10 @@ jobs:
         else
           echo "updated=true" >> $GITHUB_OUTPUT
         fi
+    - name: Parse
+      if: steps.updated.outputs.updated == 'true'
+      run: |
+        python codes/parse.py
     - name: Git push
       if: steps.updated.outputs.updated == 'true'
       run: |
@@ -43,36 +47,4 @@ jobs:
         git add -A
         git -c user.name=GitHub -c user.email=noreply@github.com commit \
           -m "Csv updated: ${TODAY}"
-        git push
-  parse:
-    runs-on: ubuntu-latest
-    needs: download
-    if: needs.download.outputs.updated == 'true'
-    steps:
-    - run: |
-        sudo timedatectl set-timezone Asia/Shanghai
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
-    - name: Parse
-      run: |
-        python codes/parse.py
-    - id: updated
-      name: Checking if updated
-      run: |
-        if [[ -z $(git status -s) ]]
-        then
-          echo "Nothing to commit, tree is clean"
-          echo "updated=false" >> $GITHUB_OUTPUT
-        else
-          echo "updated=true" >> $GITHUB_OUTPUT
-        fi
-    - name: Git push
-      if: steps.updated.outputs.updated == 'true'
-      run: |
-        TODAY=$(date +"%FT%H:%M:%S%z")
-        git add -A
-        git -c user.name=GitHub -c user.email=noreply@github.com commit \
-          -m "Result updated: ${TODAY}"
         git push
